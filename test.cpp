@@ -1,4 +1,7 @@
-```
+/**
+    @author Vahagn Vardanyan (@vah_13)
+    @version 1.1 31/07/17 
+*/
 #include <windows.h>
 #include <tlhelp32.h>
 #include <iostream>
@@ -210,4 +213,3 @@ int main()
 
 
 }
-```
