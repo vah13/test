@@ -1,3 +1,10 @@
+/**
+ +    @author Vahagn Vardanyan (@vah_13)
+ +    @version 1.1 31/07/17 
+ +	  Kudos to @jarod42
+ +
+**/
+
 #include <set>
 #include <windows.h>
 #include <tlhelp32.h>
@@ -34,9 +41,6 @@ list<int> tmp_arr;
 		
 		int len = std::distance(tmp_arr.begin(),tmp_arr.end());
 		cout << "len "<< len << endl;
-//		int *arr = new int[tmp_arr.size()];
-//		copy(tmp_arr.begin(),tmp_arr.end(),j_arr);
-//cout<< std::distance(tmp_arr.begin(),tmp_arr.end());
 return tmp_arr;
 }
 
@@ -118,7 +122,6 @@ bool readMemory(DWORD pid, char* _p, size_t len)
 			}
 		}
 		
-		//cout<< "length = " << bytesRead << endl;
 		
 		if (bytesRead>1)
 		{
@@ -135,7 +138,7 @@ bool readMemory(DWORD pid, char* _p, size_t len)
 	return true;
 }
 
-void foo(const std::list<int>& first, const std::list<int>& second, const int limit)
+void foo(DWORD pid, const std::list<int>& first, const std::list<int>& second, const int limit)  
 {
 	cout << "foo\n";
     std::list<int>::const_iterator it1 = first.begin();
@@ -148,14 +151,11 @@ void foo(const std::list<int>& first, const std::list<int>& second, const int li
         } else if (*it2 + limit < *it1) {
             ++it2;
         } else {
-
-					
-            //std::cout << *it2 <<" "<< *it1 << std::endl;
-			{
-				            //std::cout << intToHexString(*it1+2) <<" "<< intToHexString(*it2) << " " <<*it2-*it1<< std::endl;
-							try{
+				
+           	{
+				            try{
 								if (*it2-*it1>0)
-									readMemory(6604,(char*)(void*)(*it1+2),*it2-*it1-2);//);
+									readMemory(pid,(char*)(void*)(*it1+2),*it2-*it1-2);//);
 							}catch (int a){
 							cout<< "cc"<<endl;
 							}
@@ -245,79 +245,14 @@ void __main(bool flag)
 			GetAddressOfData(PID, _end_magic_data1, (sizeof(_end_magic_data1)/sizeof(*_end_magic_data1))-1,end_address );
 		cout << "DDDDDDDDDD " << std::distance(end_address.begin(),end_address.end()) << endl;
 		
-		
-		
-		//start_address.reverse();
-	//	end_address.reverse();
-
-
 		int key = 0;
 		int count = 0;
-		
-
-		/* i - index of start_address
-			std::vector<double> v;
-			double* i_arr = &v[0];
-		*/
-
-		//int i_len = std::distance(start_address.begin(),start_address.end()); 
-		//int *i_arr = new int[i_len];
-		//std::copy(start_address.begin(), start_address.end(), i_arr);
-		
-
-		//int j_len = std::distance(end_address.begin(),end_address.end()); 
-		//int *j_arr = new int[j_len];;
-		//std::copy(end_address.begin(), end_address.end(), j_arr);
-		//optimize
-		//list<int> ret_list ;
-		
-		//cout << j_len << endl;
-		
-
-		//ret_list = optimize(i_arr,i_len);
-		//start_address.clear();
-		//start_address = ret_list;
-		//cout << "leeength " << std::distance(start_address.begin(),start_address.end())<<endl;
-
-		//ret_list = optimize(j_arr,j_len);
-		//end_address.clear();
-		//end_address = ret_list;
-		//cout << "leeength " << std::distance(end_address.begin(),end_address.end())<<endl;
-
+	
 		cout << "_main foo\n";
 
-		foo(start_address,end_address,33);
+		foo(PID, start_address,end_address,33);
 		cout<< "ENDDD "<< endl;
-		cin.get();
-		///ret_list.clear();		
-		//start_address.reverse();
-		//end_address.reverse();
-
-
-//		cout << intToHexString(i_arr[0]) << " " ;
-/*
-		for (std::list<int>::const_iterator iterator = start_address.begin(), end = start_address.end(); iterator != end; ++iterator) 
-		{
-			int i = *iterator;
-			
-			key = i;	
-			for (int j=key;j<key+33;j++)
-			{
-				std::list<int>::iterator it = std::find(end_address.begin(), end_address.end(), j);///////////////////// need use another search alg
-
-				if ( it != end_address.end() )
-				{
-						if (readMemory(PID,(char*)(void*)(i+2),j-i-2))
-							{	
-								break;
-							}
-				}
-			}
-						//count++;
-						//cout << count << endl;
-		}
-
-	cout<<count;*/
+		
 }
 int main()
 {
@@ -325,7 +260,7 @@ int main()
 	__main(true);
 
 	char type = '\0';
-	while( PromptForChar( "Try 00x00x00x00x00x00x00 magic data (it can take a lot of time, try to run the code in python or try change search function (166-173 lines (: ? [y/n]", type ) )
+	while( PromptForChar( "Try 00x00x00x00x00x00x00 magic data (may have more false positive) ? [y/n]", type ) )
 		{
 			if (type == 'y')
 			{
