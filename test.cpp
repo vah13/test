@@ -18,6 +18,7 @@
 #include <iomanip>
 #include <stdio.h>
 #include <ctype.h>
+
 using namespace std;
 
 list<int> optimize(int j_arr[],int j_len)
@@ -138,9 +139,9 @@ bool readMemory(DWORD pid, char* _p, size_t len)
 	return true;
 }
 
-void foo(DWORD pid, const std::list<int>& first, const std::list<int>& second, const int limit)  
+void binsearch(DWORD pid, const std::list<int>& first, const std::list<int>& second, const int limit)  
 {
-	cout << "foo\n";
+	cout << "binsearch start \n";
     std::list<int>::const_iterator it1 = first.begin();
     std::list<int>::const_iterator  it2 = second.begin();
 
@@ -163,6 +164,7 @@ void foo(DWORD pid, const std::list<int>& first, const std::list<int>& second, c
             ++it1;
         }
     }
+		cout << "binsearch end \n";
 }
 
 void GetAddressOfData(DWORD pid, const char *data, size_t len, list<int>& entries)
@@ -207,8 +209,7 @@ void GetAddressOfData(DWORD pid, const char *data, size_t len, list<int>& entrie
         }
     }
 	
-	cout << "count " <<  count << '\n';
-	cout << "start return\n";
+	cout << "return list of address " << intToHexString(count) << endl;
 		
 	return ;
 }
@@ -231,6 +232,7 @@ void __main(bool flag)
 		{
 			cout<< (int)_end_magic_data1[mg];
 		}
+		cout << endl;
 		int PID = GetProcId("TeamViewer.exe");	
 		std::cout << "Local data address: " << (void*)start_magic_data << "\n";
 		cout<<"start end magic search "<<'\n';	
@@ -238,24 +240,47 @@ void __main(bool flag)
 		
 		list<int> start_address ; 
 			GetAddressOfData(PID, start_magic_data, 2, start_address);	
-		cout << "DDDDDDDDDD " << std::distance(start_address.begin(),start_address.end()) << endl;
+		cout << "start mg address length "<< intToHexString(std::distance(start_address.begin(),start_address.end())) << endl;
 
 
 		list<int> end_address  ; 
 			GetAddressOfData(PID, _end_magic_data1, (sizeof(_end_magic_data1)/sizeof(*_end_magic_data1))-1,end_address );
-		cout << "DDDDDDDDDD " << std::distance(end_address.begin(),end_address.end()) << endl;
+		cout << "end mg address length " << intToHexString(std::distance(end_address.begin(),end_address.end())) << endl;
 		
 		int key = 0;
 		int count = 0;
 	
-		cout << "_main foo\n";
+		cout << "_main binsearch\n";
 
-		foo(PID, start_address,end_address,33);
-		cout<< "ENDDD "<< endl;
+		binsearch(PID, start_address,end_address,33);
+		cout<< "_main binsearch "<< endl;
 		
+}
+void getTVaddress()
+{
+	char* appdata = getenv("APPDATA") ;
+	char* tvaddr  = "\\TeamViewer\\MRU\\RemoteSupport\\*.tvc";
+	char* path = new char[strlen(appdata)+strlen(tvaddr)+1];
+
+	sprintf(path, "%s%s", appdata, tvaddr);
+
+	cout << "Get TV address\n";
+
+	HANDLE hFind;
+	WIN32_FIND_DATA data;
+
+	hFind = FindFirstFile(path, &data);
+	if (hFind != INVALID_HANDLE_VALUE) {
+	  do {
+		printf("%s\n", data.cFileName);
+	  } while (FindNextFile(hFind, &data));
+	  FindClose(hFind);
+	}
+
 }
 int main()
 {
+	getTVaddress();
 	
 	__main(true);
 
